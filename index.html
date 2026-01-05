@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario 2026 - Sara & Alvaro</title>
+    
+    <!-- Tipografías -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Pinyon+Script&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #fdfbf7; 
+            --text-color: #4a4a4a; 
+            --accent-gold: #d4af37; 
+            --accent-sage: #aebfa3; 
+            --accent-rose: #dec4c4; 
+            --grid-line: #e0e0e0;
+            --note-color: #666;
+            --crossed-color: rgba(74, 74, 74, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #e0e0e0;
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--text-color);
+        }
+
+        /* Página A4 */
+        .page {
+            background-color: var(--bg-color);
+            width: 210mm;
+            height: 297mm;
+            margin: 20px auto;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Foto */
+        .photo-frame {
+            width: 100%;
+            height: 48%; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #f4f4f4;
+        }
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Cabecera */
+        .month-header {
+            text-align: center;
+            margin: 10px 0;
+        }
+        .month-name {
+            font-family: 'Pinyon Script', cursive;
+            font-size: 3rem;
+            line-height: 1;
+        }
+        .year {
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #888;
+        }
+        .seasonal-icon {
+            width: 20px;
+            height: 20px;
+            margin: 5px auto 0;
+            opacity: 0.6;
+            display: block;
+        }
+        .seasonal-icon path, .seasonal-icon circle, .seasonal-icon line, .seasonal-icon polygon {
+            stroke: var(--accent-gold);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        /* Calendario */
+        .calendar-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-top: 1px solid var(--grid-line);
+            border-left: 1px solid var(--grid-line);
+        }
+
+        .weekday {
+            text-align: center;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--grid-line);
+            border-right: 1px solid var(--grid-line);
+            background-color: #faf9f6;
+        }
+
+        /* Celdas de días */
+        .day {
+            position: relative;
+            aspect-ratio: 1 / 1; 
+            border-right: 1px solid var(--grid-line);
+            border-bottom: 1px solid var(--grid-line);
+            font-size: 1rem;
+            cursor: pointer; /* Indica interactividad */
+            transition: background 0.2s;
+            overflow: hidden;
+        }
+
+        .day:hover {
+            background-color: #f9fdf9;
+        }
+
+        /* Número del día */
+        .day-num {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 0.9rem;
+            z-index: 2;
+        }
+
+        /* Estilo Tachado (Doble Clic) */
+        .day.crossed {
+            background-color: #f4f4f4;
+            color: #ccc;
+        }
+        
+        /* Línea diagonal para tachar */
+        .day.crossed::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top left, transparent calc(50% - 1px), var(--crossed-color) calc(50% - 1px), var(--crossed-color) calc(50% + 1px), transparent calc(50% + 1px));
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Notas del usuario */
+        .user-note {
+            position: absolute;
+            top: 22px; /* Debajo del número */
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            font-family: 'Arial', sans-serif; /* Fuente legible para notas pequeñas */
+            font-size: 0.65rem;
+            color: var(--note-color);
+            line-height: 1.1;
+            overflow: hidden;
+            white-space: pre-wrap;
+            z-index: 2;
+            word-wrap: break-word;
+        }
+
+        /* Eventos especiales predefinidos */
+        .event-caption {
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'Pinyon Script', cursive;
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            line-height: 1;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .holiday .day-num { color: var(--accent-gold); font-weight: 600; }
+        .special-date .day-num { font-weight: 700; color: var(--text-color); }
+        .special-date .day-num::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--accent-gold);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+        .empty { background-color: transparent; cursor: default; }
+
+        /* --- MODAL (Ventana Emergente) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 4px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .modal-title { font-size: 1.5rem; margin-bottom: 15px; color: var(--text-color); }
+        
+        textarea.note-input {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-family: sans-serif;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-cancel { background: #eee; color: #555; }
+        .btn-save { background: var(--accent-gold); color: white; }
+        .btn-delete { background: #e57373; color: white; margin-right: auto; }
+
+        /* Impresión */
+        @media print {
+            body { background-color: white; }
+            .page { margin: 0; box-shadow: none; width: 100%; height: 100%; page-break-after: always; }
+            .modal-overlay { display: none !important; }
+            .day:hover { background-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL PARA AGREGAR NOTAS -->
+    <div class="modal-overlay" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Nota para el día</div>
+            <textarea class="note-input" id="noteInput" placeholder="Escribe aquí tu plan, cita o recuerdo..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-delete" id="deleteNoteBtn">Borrar</button>
+                <button class="btn btn-cancel" id="cancelBtn">Cancelar</button>
+                <button class="btn btn-save" id="saveBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ENERO -->
+    <div class="page" data-month="1">
+        <div class="photo-frame">
+            <img src="imagenes/enero.jpg" alt="Enero" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/enero.jpg</div>'">
+        </div>
+        <div class="month-header">
+            <div class="month-name">Enero</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day holiday"><span class="day-num">1</span></div>
+            <div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div>
+            <div class="day"><span class="day-num">5</span></div><div class="day holiday"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div>
+            <div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div>
+            <div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div>
+            <div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div>
+            <div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day"><span class="day-num">31</span></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- FEBRERO -->
+    <div class="page" data-month="2">
+        <div class="photo-frame"><img src="imagenes/febrero.jpg" alt="Febrero" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/febrero.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Febrero</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div>
+            <div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div>
+            <div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div>
+            <div class="day special-date"><span class="day-num">14</span><span class="event-caption">Amor</span></div>
+            <div class="day"><span class="day-num">15</span></div>
+            <div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div>
+            <div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- MARZO -->
+    <div class="page" data-month="3">
+        <div class="photo-frame"><img src="imagenes/marzo.jpg" alt="Marzo" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/marzo.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Marzo</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z" style="stroke: var(--accent-sage);"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div>
+            <div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div>
+            <div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div>
+            <div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div>
+            <div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day holiday"><span class="day-num">29</span></div>
+            <div class="day"><span class="day-num">30</span></div><div class="day"><span class="day-num">31</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- ABRIL -->
+    <div class="page" data-month="4">
+        <div class="photo-frame"><img src="imagenes/abril.jpg" alt="Abril" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/abril.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Abril</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" style="stroke:var(--accent-rose);"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" style="stroke:var(--accent-rose);"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day holiday"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div>
+            <div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div>
+            <div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div>
+            <div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div>
+            <div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- MAYO -->
+    <div class="page" data-month="5">
+        <div class="photo-frame"><img src="imagenes/mayo.jpg" alt="Mayo" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/mayo.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Mayo</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M12 2l2 5h5l-4 4 2 6-5-3-5 3 2-6-4-4h5z"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day holiday"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div>
+            <div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div>
+            <div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div>
+            <div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div>
+            <div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day"><span class="day-num">31</span></div>
+        </div>
+    </div>
+
+    <!-- JUNIO -->
+    <div class="page" data-month="6">
+        <div class="photo-frame"><img src="imagenes/junio.jpg" alt="Junio" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/junio.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Junio</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div>
+            <div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div>
+            <div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div>
+            <div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div>
+            <div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- JULIO -->
+    <div class="page" data-month="7">
+        <div class="photo-frame"><img src="imagenes/julio.jpg" alt="Julio" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/julio.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Julio</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M2 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div>
+            <div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div>
+            <div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div>
+            <div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day holiday"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div>
+            <div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day"><span class="day-num">31</span></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- AGOSTO -->
+    <div class="page" data-month="8">
+        <div class="photo-frame"><img src="imagenes/agosto.jpg" alt="Agosto" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/agosto.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Agosto</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M12 2l2 10h10l-8 6 3 10-7-5-7 5 3-10-8-6h10z" style="stroke:var(--accent-gold);"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div>
+            <div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div>
+            <div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day holiday"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div>
+            <div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div>
+            <div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div>
+            <div class="day"><span class="day-num">31</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- SEPTIEMBRE -->
+    <div class="page" data-month="9">
+        <div class="photo-frame"><img src="imagenes/septiembre.jpg" alt="Septiembre" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/septiembre.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Septiembre</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M18 10c0-4.42-3.58-8-8-8s-8 3.58-8 8c0 3.06 1.73 5.72 4.28 7.04C7.38 18.2 8 19.5 8 21h8c0-1.5.62-2.8 1.72-3.96C20.27 15.72 22 13.06 22 10z"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div>
+            <div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div>
+            <div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div>
+            <div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div>
+            <div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- OCTUBRE -->
+    <div class="page" data-month="10">
+        <div class="photo-frame"><img src="imagenes/octubre.jpg" alt="Octubre" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/octubre.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Octubre</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" style="stroke: #d99;"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div>
+            <div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div>
+            <div class="day holiday"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div>
+            <div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div>
+            <div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day"><span class="day-num">31</span></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- NOVIEMBRE -->
+    <div class="page" data-month="11">
+        <div class="photo-frame"><img src="imagenes/noviembre.jpg" alt="Noviembre" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/noviembre.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Noviembre</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" style="stroke: #555;"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+            <div class="day holiday"><span class="day-num">1</span></div>
+            <div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div>
+            <div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div><div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div>
+            <div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div>
+            <div class="day special-date"><span class="day-num">22</span><span class="event-caption">Alvaro</span></div>
+            <div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div>
+            <div class="day"><span class="day-num">30</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <!-- DICIEMBRE -->
+    <div class="page" data-month="12">
+        <div class="photo-frame"><img src="imagenes/diciembre.jpg" alt="Diciembre" onerror="this.parentNode.innerHTML='<div style=\'text-align:center;color:#ccc;\'>Falta: imagenes/diciembre.jpg</div>'"></div>
+        <div class="month-header">
+            <div class="month-name">Diciembre</div>
+            <div class="year">2026</div>
+            <svg class="seasonal-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="calendar-grid">
+            <div class="weekday">Lun</div><div class="weekday">Mar</div><div class="weekday">Mié</div><div class="weekday">Jue</div><div class="weekday">Vie</div><div class="weekday">Sáb</div><div class="weekday">Dom</div>
+            <div class="day empty"></div>
+            <div class="day"><span class="day-num">1</span></div><div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div><div class="day"><span class="day-num">5</span></div><div class="day holiday"><span class="day-num">6</span></div>
+            <div class="day"><span class="day-num">7</span></div><div class="day holiday"><span class="day-num">8</span></div><div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div><div class="day"><span class="day-num">12</span></div><div class="day"><span class="day-num">13</span></div>
+            <div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div><div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div>
+            <div class="day special-date"><span class="day-num">19</span><span class="event-caption">Sara</span></div>
+            <div class="day"><span class="day-num">20</span></div>
+            <div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div><div class="day"><span class="day-num">23</span></div><div class="day"><span class="day-num">24</span></div><div class="day holiday"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div>
+            <div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div><div class="day"><span class="day-num">30</span></div><div class="day"><span class="day-num">31</span></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 1. Inicialización: Darle ID únicos a cada día para guardar datos ---
+            const pages = document.querySelectorAll('.page');
+            
+            pages.forEach(page => {
+                const month = page.getAttribute('data-month');
+                const days = page.querySelectorAll('.day:not(.empty)');
+                
+                days.forEach(day => {
+                    const numSpan = day.querySelector('.day-num');
+                    const dayNum = numSpan.innerText;
+                    const dateId = `2026-${month}-${dayNum}`;
+                    day.setAttribute('data-id', dateId);
+                    
+                    // Cargar estado guardado (Tachado)
+                    if (localStorage.getItem(dateId + '_crossed') === 'true') {
+                        day.classList.add('crossed');
+                    }
+
+                    // Cargar notas guardadas
+                    const savedNote = localStorage.getItem(dateId + '_note');
+                    if (savedNote) {
+                        createNoteElement(day, savedNote);
+                    }
+                });
+            });
+
+            // --- 2. Lógica de Modal y Eventos ---
+            const modal = document.getElementById('noteModal');
+            const noteInput = document.getElementById('noteInput');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const deleteBtn = document.getElementById('deleteNoteBtn');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            let currentDayElement = null;
+            let currentId = null;
+            let clickTimer = null; // Para distinguir clic de doble clic
+
+            // Función auxiliar para añadir visualmente la nota al día
+            function createNoteElement(dayElement, text) {
+                // Si ya existe una nota, quitarla primero para actualizar
+                const existing = dayElement.querySelector('.user-note');
+                if (existing) existing.remove();
+
+                if (text && text.trim() !== '') {
+                    const noteDiv = document.createElement('div');
+                    noteDiv.className = 'user-note';
+                    noteDiv.innerText = text;
+                    dayElement.appendChild(noteDiv);
+                }
+            }
+
+            // Delegación de eventos para todos los días
+            document.body.addEventListener('click', (e) => {
+                const day = e.target.closest('.day');
+                
+                // Si no es un día o es un día vacío, salir
+                if (!day || day.classList.contains('empty')) return;
+
+                // Verificar si es un click sencillo o parte de un doble click
+                if (e.detail === 1) {
+                    clickTimer = setTimeout(() => {
+                        // --- Lógica Click Sencillo: Abrir Notas ---
+                        currentDayElement = day;
+                        currentId = day.getAttribute('data-id');
+                        
+                        // Cargar nota existente en el textarea
+                        const savedNote = localStorage.getItem(currentId + '_note') || '';
+                        noteInput.value = savedNote;
+                        
+                        // Configurar título
+                        const dayNum = day.querySelector('.day-num').innerText;
+                        const monthName = day.closest('.page').querySelector('.month-name').innerText;
+                        modalTitle.innerText = `Nota para el ${dayNum} de ${monthName}`;
+                        
+                        modal.style.display = 'flex';
+                        noteInput.focus();
+                    }, 200); // 200ms de espera para ver si llega un segundo click
+                }
+            });
+
+            document.body.addEventListener('dblclick', (e) => {
+                const day = e.target.closest('.day');
+                if (!day || day.classList.contains('empty')) return;
+
+                // Cancelar el timer del click sencillo
+                clearTimeout(clickTimer);
+
+                // --- Lógica Doble Clic: Tachar ---
+                day.classList.toggle('crossed');
+                const id = day.getAttribute('data-id');
+                const isCrossed = day.classList.contains('crossed');
+                
+                if (isCrossed) {
+                    localStorage.setItem(id + '_crossed', 'true');
+                } else {
+                    localStorage.removeItem(id + '_crossed');
+                }
+            });
+
+            // --- Botones del Modal ---
+            
+            cancelBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            saveBtn.addEventListener('click', () => {
+                if (currentId && currentDayElement) {
+                    const text = noteInput.value.trim();
+                    if (text) {
+                        localStorage.setItem(currentId + '_note', text);
+                        createNoteElement(currentDayElement, text);
+                    } else {
+                        // Si está vacío, borrar nota
+                        localStorage.removeItem(currentId + '_note');
+                        const existing = currentDayElement.querySelector('.user-note');
+                        if (existing) existing.remove();
+                    }
+                }
+                modal.style.display = 'none';
+            });
+
+            deleteBtn.addEventListener('click', () => {
+                if (currentId && currentDayElement) {
+                    localStorage.removeItem(currentId + '_note');
+                    const existing = currentDayElement.querySelector('.user-note');
+                    if (existing) existing.remove();
+                    noteInput.value = '';
+                }
+                modal.style.display = 'none';
+            });
+
+            // Cerrar modal si se hace click fuera
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
